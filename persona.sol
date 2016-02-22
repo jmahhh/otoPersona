@@ -14,15 +14,16 @@ contract Identity {
 
     event onResult(uint resultType, string resultMsg);
 
+    //sets a contract and some data.
     function Identity(string _idType, address _defaultVEContract, bytes _idData) {
         owner = tx.origin;
         idType = _idType;
         idData = _idData;
 
         VEContractIndex = 1;
-        VEAdmins[0x63ad0cb91d02c91b9392d1af58c87e282238a3a6] = VEContractIndex;
-        VEContracts[VEContractIndex] = _defaultVEContract;
-        VEContractIndexMap[_defaultVEContract] = VEContractIndex;
+        VEAdmins[0x63ad0cb91d02c91b9392d1af58c87e282238a3a6] = VEContractIndex; //admin db
+        VEContracts[VEContractIndex] = _defaultVEContract; //I think this is an address array (why 10?)
+        VEContractIndexMap[_defaultVEContract] = VEContractIndex; //docs all contracts
     }
 
     function setOwner(address newOwner) {
@@ -35,26 +36,27 @@ contract Identity {
         if (tx.origin == owner) {
             if (isIdData) {
                 idData = data;
-                delete VEStamps;
+                delete VEStamps; //referenced below
             } else {
                 metaData = data;
             }
         }
     }
 
+    
     function setVE(address accountAddress, address veContractAddress, uint state) {
-        if (VEAdmins[tx.origin] == 1) {
-            uint index = VEContractIndexMap[veContractAddress];
-            if (index > 0) {
-                if (state == 0) {
+        if (VEAdmins[tx.origin] == 1) { // runs if called by VEAdmin 1
+            uint index = VEContractIndexMap[veContractAddress]; 
+            if (index > 0) { //if contract in db...
+                if (state == 0) { //what do state / accountAddress stand for?
                     VEAdmins[accountAddress] = 0;
                 } else if (state == 1) {
                     VEAdmins[accountAddress] = index;
                 }
-            } else {
-                ++VEContractIndex;
-                VEAdmins[accountAddress] = VEContractIndex;
-                VEContracts[VEContractIndex] = veContractAddress;
+            } else { //if contract does not exist in db...
+                ++VEContractIndex; //++? Increments by one?
+                VEAdmins[accountAddress] = VEContractIndex; //adds account address to admin db
+                VEContracts[VEContractIndex] = veContractAddress; //adds contract address to db
             }
         }
     }
